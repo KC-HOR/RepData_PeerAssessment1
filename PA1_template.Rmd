@@ -9,17 +9,146 @@ output:
 ## Loading and preprocessing the data
 
 
+Read the data from "activity.csv" file. Ensure that "activity.csv"" is located in your current working directory
+
+```{r}
+data <- read.csv("activity.csv")
+```
+
+Load up the required library
+
+```{r}
+library(ggplot2)
+library(dplyr)
+```
 
 ## What is mean total number of steps taken per day?
 
+Calculate the total number of steps taken each day
 
+```{r}
+stepsperday <- with(data, tapply(steps,date,sum))
+```
+
+Generate a histogram to show the total number of steps taken each day and report the mean and median
+
+```{r, fig.height=5,fig.width=4}
+hist(stepsperday, labels = TRUE, ylim = c(0,35))
+
+```
+
+Step count between 10,000 to 15,000 
+
+```{r}
+summary(stepsperday)
+```
+
+Mean number of steps per day = 10,766 
+Median number of steps per day = 10,765
 
 ## What is the average daily activity pattern?
 
+Convert data$interval to a factor
 
+```{r}
+data$interval <- as.factor(data$interval)
+```
+
+Work out the average steps for each 5 min interval , across the days
+
+```{r}
+ave <- aggregate(data$steps, by=list(interval = data$interval), FUN = mean, na.rm = TRUE)
+```
+
+Plot interval vs ave number of steps across the days
+
+```{r}
+aveplot <- ggplot(data = ave, aes(x = interval,y = x, group = 1))
+ggplot(data = ave, aes(x = interval,y = x, group = 1)) + geom_line() + geom_point()  + xlab("Interval") + ylab("Average number of steps across the days")
+```
+
+Insert labels indicating the interval at each point, this will allow us to 'eyeball' which interval has the highest avereage steps
+
+```{r}
+aveplot+ geom_line() + geom_label(aes(label=interval),label.size = 0.01)
+```
+
+To be more precise, we search through ave to identify the interval with the highest number of steps
+
+```{r}
+ave[which.max(ave$x),]
+```
+
+From which we get 835th minute interval at 206 steps 
 
 ## Imputing missing values
 
+```{r}
+sum(is.na(data$steps))
+```
 
+From the results above there are 2304 NA values
+
+```{r}
+data2 <- data
+```
+```{r}
+##loop through data2, 
+for (i in 1:nrow(data2)){
+    ## if we encounter a NA value in "steps"
+    if (is.na(data2[i,"steps"])){
+       ##Get the interval
+       I <- data2[i,"interval"] 
+       ##look up ave and get the row that correspond to the same interval
+       aveRow <- which(ave$interval == I)
+       ## replace the "steps" value in data for that interval with the average steps of the same interval from ave
+       data2[i,"steps"] <- ave[aveRow,"x"]
+    }
+
+}
+```
+
+```{r}
+stepsperday2 <- with(data2, tapply(steps,date,sum))
+hist(stepsperday2, labels = TRUE, ylim = c(0,40))
+```
+```{r}
+summary(stepsperday2)
+```
+
+Slightly higher max frequency for the 10,000 to 15,000 steps interval on the histogram. Other than that the impact of imputing missing values by using the average across all the days, is minimal
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+```{r}
+WD<- weekdays(as.Date(data$date))
+W <- vector(mode = "character", length = 17568)
+```
+
+```{r}
+##loop through data2, 
+for (j in 1:length(WD)){
+    ## if we encounter a NA value in "steps"
+    if (WD[j] == "Monday" | WD[j] == "Tuesday" |WD[j] == "Wednesday" | WD[j] == "Thursday" | WD[j] == "Friday"){
+       W[j] <- "weekday"
+    }
+  
+    if (WD[j] == "Saturday" | WD[j] == "Sunday"){
+      
+      W[j]<- "weekend"
+    }
+
+}
+```
+
+```{r}
+data2 <- mutate(data2, Weekday = as.factor(W))
+ave2<- aggregate(data2$steps, by=list(interval = data2$interval, day = data2$Weekday), FUN = mean, na.rm = TRUE)
+ave2$x <- round(ave2$x, digits = 1)
+```
+
+```{r}
+xyplot(data = ave2, x~as.numeric(interval) | day, panel = function(x, y) , ylab = "Average steps across all days", xlab = "Interval", layout = c(1,2))
+```
+
+
