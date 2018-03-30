@@ -9,15 +9,40 @@ output:
 ## Loading and preprocessing the data
 Load up the required library
 
-```{r}
-library(ggplot2)
-library(dplyr)
 
+```r
+library(ggplot2)
+```
+
+```
+## Warning: package 'ggplot2' was built under R version 3.4.3
+```
+
+```r
+library(dplyr)
+```
+
+```
+## 
+## Attaching package: 'dplyr'
+```
+
+```
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
 ```
 
 Read the data from "activity.csv" file. Ensure that "activity.csv"" is located in the same directory as your R Markdown file !
 
-```{r}
+
+```r
 data <- read.csv("activity.csv")
 ```
 
@@ -27,21 +52,30 @@ data <- read.csv("activity.csv")
 
 Calculate the total number of steps taken each day
 
-```{r}
+
+```r
 stepsperday <- with(data, tapply(steps,date,sum))
 ```
 
 Generate a histogram to show the total number of steps taken each day and report the mean and median
 
-```{r, fig.height=5,fig.width=4}
-hist(stepsperday, labels = TRUE, ylim = c(0,35))
 
+```r
+hist(stepsperday, labels = TRUE, ylim = c(0,35))
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
 
 Step count between 10,000 to 15,000 
 
-```{r}
+
+```r
 summary(stepsperday)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##      41    8841   10765   10766   13294   21194       8
 ```
 
 Mean number of steps per day = 10,766 
@@ -51,49 +85,70 @@ Median number of steps per day = 10,765
 
 Convert data$interval to a factor
 
-```{r}
+
+```r
 data$interval <- as.factor(data$interval)
 ```
 
 Work out the average steps for each 5 min interval , across the days
 
-```{r}
+
+```r
 ave <- aggregate(data$steps, by=list(interval = data$interval), FUN = mean, na.rm = TRUE)
 ```
 
 Plot interval vs ave number of steps across the days
 
-```{r}
+
+```r
 aveplot <- ggplot(data = ave, aes(x = interval,y = x, group = 1))
 ggplot(data = ave, aes(x = interval,y = x, group = 1)) + geom_line() + geom_point()  + xlab("Interval") + ylab("Average number of steps across the days")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+
 Insert labels indicating the interval at each point, this will allow us to 'eyeball' which interval has the highest avereage steps
 
-```{r}
+
+```r
 aveplot+ geom_line() + geom_label(aes(label=interval),label.size = 0.01)
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+
 To be more precise, we search through ave to identify the interval with the highest number of steps
 
-```{r}
+
+```r
 ave[which.max(ave$x),]
+```
+
+```
+##     interval        x
+## 104      835 206.1698
 ```
 
 From which we get 835th minute interval at 206 steps 
 
 ## Imputing missing values
 
-```{r}
+
+```r
 sum(is.na(data$steps))
+```
+
+```
+## [1] 2304
 ```
 
 From the results above there are 2304 NA values
 
-```{r}
+
+```r
 data2 <- data
 ```
-```{r}
+
+```r
 ##loop through data2, 
 for (i in 1:nrow(data2)){
     ## if we encounter a NA value in "steps"
@@ -109,24 +164,35 @@ for (i in 1:nrow(data2)){
 }
 ```
 
-```{r}
+
+```r
 stepsperday2 <- with(data2, tapply(steps,date,sum))
 hist(stepsperday2, labels = TRUE, ylim = c(0,40))
 ```
-```{r}
+
+![](PA1_template_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+
+```r
 summary(stepsperday2)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##      41    9819   10766   10766   12811   21194
 ```
 
 Slightly higher max frequency for the 10,000 to 15,000 steps interval on the histogram. Other than that the impact of imputing missing values by using the average across all the days, is minimal
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
-```{r}
+
+```r
 WD<- weekdays(as.Date(data$date))
 W <- vector(mode = "character", length = 17568)
 ```
 
-```{r}
+
+```r
 ##loop through data2, 
 for (j in 1:length(WD)){
     ## if we encounter a NA value in "steps"
@@ -142,15 +208,18 @@ for (j in 1:length(WD)){
 }
 ```
 
-```{r}
+
+```r
 data2 <- mutate(data2, Weekday = as.factor(W))
 ave2<- aggregate(data2$steps, by=list(interval = data2$interval, day = data2$Weekday), FUN = mean, na.rm = TRUE)
 ave2$x <- round(ave2$x, digits = 1)
 ```
 
-```{r}
 
+```r
 ggplot(data = ave2, aes(x = interval, y = x, group = day)) + geom_line() + facet_grid(day~.) + scale_x_discrete(breaks = c(0,1000,2000,3000)) + ylab("Average number of steps across all days")
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
 
 From the plots, weekday activity tend to start earlier, while weekend activity tend to end later
