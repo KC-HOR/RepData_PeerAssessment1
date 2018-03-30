@@ -61,12 +61,11 @@ Generate a histogram to show the total number of steps taken each day and report
 
 
 ```r
-hist(stepsperday, labels = TRUE, ylim = c(0,35))
+hist(stepsperday, labels = TRUE, ylim = c(0,35), main = "Histogram of total steps per day", xlab = "Total steps per day")
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
 
-Step count between 10,000 to 15,000 
 
 
 ```r
@@ -102,7 +101,7 @@ Plot interval vs ave number of steps across the days
 
 ```r
 aveplot <- ggplot(data = ave, aes(x = interval,y = x, group = 1))
-ggplot(data = ave, aes(x = interval,y = x, group = 1)) + geom_line() + geom_point()  + xlab("Interval") + ylab("Average number of steps across the days")
+ggplot(data = ave, aes(x = interval,y = x, group = 1)) + geom_line() + geom_point()  + xlab("Interval") + ylab("Average number of steps across the days") + ggtitle("Ave no of steps across days") + scale_x_discrete(breaks = c(0,1000,2000,3000)) 
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
@@ -144,6 +143,8 @@ sum(is.na(data$steps))
 From the results above there are 2304 NA values
 
 
+Our strategy to impute missing value is to replace all missing value with the average value across all the days for the corresponding 5-minute interval, which we have conveniently calculated and stored in "ave" data frame.
+
 ```r
 data2 <- data
 ```
@@ -167,7 +168,7 @@ for (i in 1:nrow(data2)){
 
 ```r
 stepsperday2 <- with(data2, tapply(steps,date,sum))
-hist(stepsperday2, labels = TRUE, ylim = c(0,40))
+hist(stepsperday2, labels = TRUE, ylim = c(0,40), main = "Average steps in each interval (with imputed value)", ylab = "Average steps", xlab = "Interval")
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
@@ -217,7 +218,7 @@ ave2$x <- round(ave2$x, digits = 1)
 
 
 ```r
-ggplot(data = ave2, aes(x = interval, y = x, group = day)) + geom_line() + facet_grid(day~.) + scale_x_discrete(breaks = c(0,1000,2000,3000)) + ylab("Average number of steps across all days")
+ggplot(data = ave2, aes(x = interval, y = x, group = day)) + geom_line() + facet_grid(day~.) + scale_x_discrete(breaks = c(0,1000,2000,3000)) + ylab("Average number of steps across all days") + ggtitle("Average steps for each interval - weekdays vs weekends ")
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
